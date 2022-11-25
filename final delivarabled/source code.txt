@@ -1,0 +1,277 @@
+Source code
+File name - index.html
+
+<!DOCTYPE html>
+<html>
+<head>
+<title>Sales Inventory Login</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<style> body {
+background-image: url('logi111.jpg');
+}
+/* Style all input fields */ input {
+width: 100%; padding: 12px; border: 1px solid #ccc; border-radius: 4px;
+box-sizing: border-box; margin-top: 6px; margin-bottom: 16px;
+}
+
+/* Style the submit button */ input[type=submit] { background-color: #04AA6D; color: white;
+}
+ 
+.container {
+background-color: #f1f1f1; padding: 20px;
+}
+
+/* The message box is shown when the user clicks on the password field */ #message {
+display:none; background: #f1f1f1; color: #000; position: relative; padding: 20px; margin-top: 10px;
+}
+
+#message p { padding: 10px 35px; font-size: 18px;
+}
+
+/* Add a green text color and a checkmark when the requirements are right */
+.valid {
+color: green;
+}
+
+.valid:before { position: relative; left: -35px; content: "?";
+}
+
+/* Add a red text color and an "x" when the requirements are wrong */
+.invalid { color: red;
+}
+
+.invalid:before { position: relative; left: -35px; content: "?";
+}
+</style>
+</head>
+<body>
+<h1 align="center" style="color:#FFFFFF">Sales Login</h3>
+<h3 align="center"></h3>
+ 
+<div class="container">
+<form action="/action_page.php">
+<label for="usrname">Username</label>
+<input type="text" id="usrname" name="usrname" required>
+
+<label for="psw">Password</label>
+<input type="password" id="psw" name="psw" pattern="(?=.*\d)(?=.*[a-z])(?=.*[A-Z]).{8,}" title="Must contain at least one number and one uppercase and lowercase letter, and at least 8 or more characters" required>
+
+<center><a href="story1.html">Login</a><center>
+</form>
+</div>
+
+<div id="message">
+<h3>Password must contain the following:</h3>
+<p id="letter" class="invalid">A <b>lowercase</b> letter</p>
+<p id="capital" class="invalid">A <b>capital (uppercase)</b> letter</p>
+<p id="number" class="invalid">A <b>number</b></p>
+<p id="length" class="invalid">Minimum <b>8 characters</b></p>
+</div>
+
+<script>
+var myInput = document.getElementById("psw"); var letter = document.getElementById("letter"); var capital = document.getElementById("capital");
+var number = document.getElementById("number"); var length = document.getElementById("length");
+
+// When the user clicks on the password field, show the message box myInput.onfocus = function() { document.getElementById("message").style.display = "block";
+}
+
+// When the user clicks outside of the password field, hide the message box myInput.onblur = function() { document.getElementById("message").style.display = "none";
+}
+
+// When the user starts to type something inside the password field myInput.onkeyup = function() {
+// Validate lowercase letters
+var lowerCaseLetters = /[a-z]/g; if(myInput.value.match(lowerCaseLetters)) { letter.classList.remove("invalid"); letter.classList.add("valid");
+} else {
+ 
+letter.classList.remove("valid"); letter.classList.add("invalid");
+}
+
+// Validate capital letters
+var upperCaseLetters = /[A-Z]/g; if(myInput.value.match(upperCaseLetters)) { capital.classList.remove("invalid"); capital.classList.add("valid");
+} else { capital.classList.remove("valid"); capital.classList.add("invalid");
+}
+
+// Validate numbers var numbers = /[0-9]/g;
+if(myInput.value.match(numbers)) { number.classList.remove("invalid"); number.classList.add("valid");
+} else { number.classList.remove("valid"); number.classList.add("invalid");
+}
+
+// Validate length if(myInput.value.length >= 8) { length.classList.remove("invalid"); length.classList.add("valid");
+} else { length.classList.remove("valid"); length.classList.add("invalid");
+}
+}
+</script>
+</body>
+</html>
+
+File name - app.py
+
+import ibm_db import re
+from flask import Flask, render_template, request, redirect, url_for, session,flash
+
+app = Flask(_name_) app.secret_key="i don't care"
+ 
+myconn=ibm_db.connect('DATABASE=bludb;HOSTNAME=b1bc1829-6f45-4cd4-bef4- 10cf081900bf.c1ogj3sd0tgtu0lqde00.databases.appdomain.cloud;PORT=32304;SECURITY=SSL;SS LServerCertificate=DigiCertGlobalRootCA.crt;UID=ytl86182;PWD=IwLcHrD3CEMU2chS', '', '')
+
+@app.route("/signup") def signup():
+return render_template("signup.html")
+
+@app.route('/register', methods =['GET', 'POST']) def register():
+msg = ''
+if request.method == 'POST' : username = request.form['username'] password = request.form['password']
+
+query = 'SELECT * FROM admin WHERE username =?;' stmt=ibm_db.prepare(myconn,query) ibm_db.bind_param(stmt,1,username) ibm_db.execute(stmt)
+account = ibm_db.fetch_assoc(stmt) print(account)
+if account:
+msg = 'Account already exists !'
+elif not re.match(r'[a-z0-9]+', username):
+msg = 'name must contain only lowercase characters and numbers !' else:
+query = "INSERT INTO ADMIN (username,password) VALUES (?,?)" stmt=ibm_db.prepare(myconn,query) ibm_db.bind_param(stmt,1,username) ibm_db.bind_param(stmt,2,password)
+ibm_db.execute(stmt)
+msg = 'You have successfully registered !' return render_template('login.html', msg = msg)
+
+
+
+
+@app.route("/") @app.route("/login",methods=['GET','POST']) def login():
+if request.method=="POST": Username=request.form['Username'] Password=request.form['Password']
+query="select * from admin where username=? and password=?;" stmt=ibm_db.prepare(myconn, query)
+ibm_db.bind_param(stmt, 1, Username)
+ibm_db.bind_param(stmt, 2, Password)
+ 
+ibm_db.execute(stmt) data=ibm_db.fetch_assoc(stmt) if data:
+session['loggedin']=True
+return render_template('cognos.html')
+
+else:
+flash("Incorrect Username or Password")
+return render_template("login.html")
+
+
+
+if _name_ == "_main_": app.run(debug=True)
+
+
+File name - login.html
+
+<!DOCTYPE html>
+<html>
+
+<head>
+<title>Login Form</title>
+<link rel="stylesheet" type="text/css" href="..\static\css\login.css">
+<link href="https://fonts.googleapis.com/css?family=Poppins:600&display=swap" rel="stylesheet">
+<script src="https://kit.fontawesome.com/a81368914c.js"></script>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+
+</head>
+
+<body>
+
+<!-- <img class="wave" src="..\static\images\wave.png"> -->
+<div class="container">
+
+<!-- <div class="img">
+<div id="png"><a href="/" title="HOME"><img style="width: 60px; height:60px ; " src="..\static\images\home-page.png"></a></div>
+<img src="..\static\images\login111.jpg" style="width:768px""height:1024px">
+</div> -->
+
+<br>
+<br>
+<br>
+<div class="login-content">
+ 
+<form action="{{url_for('login')}}" method="POST">
+<div class="msg">{{ msg }}</div>
+<img src="..\static\images\avatar.svg">
+<h2 class="title">Welcome</h2>
+<div class="input-div one">
+<div class="i">
+<i class="fas fa-user"></i>
+</div>
+<div class="div">
+
+<input type="text" name="Username" placeholder="username" class="input" required>
+</div>
+</div>
+<div class="input-div pass">
+<div class="i">
+<i class="fas fa-lock"></i>
+</div>
+<div class="div">
+
+<input type="password" name="Password" placeholder="password" class="input" required>
+</div>
+</div>
+<div class="btn">
+<button type="login" class="btn btn-default">Login</button>
+</div><br><br><br><br>
+
+
+<div class="app"><b>Don't have an account?</b><a id="app1" href="\signup">Signup Here
+!</a></div>
+</form>
+
+</div>
+
+
+</div>
+
+<script type="text/javascript" src="..\static\js\login.js"></script>
+</body>
+</html>
+
+
+File name - salesdashboard.html
+
+<html>
+<head>
+<title>
+ 
+Data Demo
+</title>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device.width, initial-scale=1">
+<link	href="https://cdn.jsdeliver.net/npm/bootstrap@S.2.1/dist/css/bootstrap.min.css" rel="stylesheet">
+<script src="https://cdn.jsdeliver.net/npm/bootstrap@S.2.1/dist/js/bundle.min.js"></script>
+</head>
+<body>
+<div class="container-fluid p-5 bg-primary text-while text-center">
+<center><h1>Sales Dashboard</h1></center>
+</div>
+<center><iframe src="https://us1.ca.analytics.ibm.com/bi/?perspective=dashboard&amp;pathRef=.my_folders%2FInve ntory%2BTotal%2Bdashboard&amp;closeWindowOnLastView=true&amp;ui_appbar=false&amp;ui
+_navbar=false&amp;shareMode=embedded&amp;action=view&amp;mode=dashboard&amp;subVie w=model00000183fadcda3b_00000000"	width="768"	height="1024"	frameborder="0" gesture="media" allow="encrypted-media" allowfullscreen=""></iframe></center>
+</body>
+</html>
+
+File name - salesstory.html
+
+<html>
+<head>
+
+<title> Sales Story
+</title>
+<style> body{
+background-image: url('homepage111.webp');
+}
+</style>
+
+<meta charset="utf-8">
+<meta name="viewport" content="width=device.width, initial-scale=1">
+<link	href="https://cdn.jsdeliver.net/npm/bootstrap@S.2.1/dist/css/bootstrap.min.css" rel="stylesheet">
+
+<script src="https://cdn.jsdeliver.net/npm/bootstrap@S.2.1/dist/js/bundle.min.js"></script>
+
+</head>
+
+<body>
+
+<div class="container-fluid p-5 bg-primary text-while text-center">
+<center style="color:#FFFFFF"><h1>Sales Story</h1></center>
+ 
+</div>
+
+<center><iframe src="https://us1.ca.analytics.ibm.com/bi/?perspective=story&amp;pathRef=.my_folders%2FInventory
+%2Btotal%2Bstory&amp;closeWindowOnLastView=true&amp;ui_appbar=false&amp;ui_navbar=fal se&amp;shareMode=embedded&amp;action=view&amp;sceneId=-1&amp;sceneTime=0" width="1080"	height="1920"	frameborder="0"	gesture="media"	allow="encrypted-media" allowfullscreen=""></iframe></center>
+</body>
+</html>
